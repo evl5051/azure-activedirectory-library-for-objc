@@ -124,8 +124,6 @@ static NSUUID * _reqCorId(NSURLRequest* request)
         //for initialization
         if (![NSURLProtocol propertyForKey:@"ADURLProtocol" inRequest:request])
         {
-            
-
             return YES;
         }
     }
@@ -161,6 +159,7 @@ static NSUUID * _reqCorId(NSURLRequest* request)
     }
     
     [NSURLProtocol setProperty:@YES forKey:kADURLProtocolPropertyKey inRequest:request];
+    request.timeoutInterval = 0;
     
     _connection = [[NSURLConnection alloc] initWithRequest:request
                                                   delegate:self
@@ -180,6 +179,7 @@ static NSUUID * _reqCorId(NSURLRequest* request)
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
     (void)connection;
+    NSLog(@"timeout interval = %lf", connection.currentRequest.timeoutInterval);
     
     AD_LOG_ERROR_F(@"-[ADURLProtocol connection:didFailedWithError:]", error.code, _correlationId, @"error: %@", error);
     [self.client URLProtocol:self didFailWithError:error];
@@ -189,6 +189,8 @@ static NSUUID * _reqCorId(NSURLRequest* request)
 willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
 {
     NSString* authMethod = [challenge.protectionSpace.authenticationMethod lowercaseString];
+    
+    NSLog(@"timeout interval = %lf", connection.currentRequest.timeoutInterval);
     
     AD_LOG_VERBOSE_F(@"connection:willSendRequestForAuthenticationChallenge:", _correlationId, @"%@. Previous challenge failure count: %ld", authMethod, (long)challenge.previousFailureCount);
     
@@ -224,6 +226,8 @@ willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challe
 {
     (void)connection;
     
+    NSLog(@"timeout interval = %lf", connection.currentRequest.timeoutInterval);
+    
     AD_LOG_VERBOSE_F(@"-[ADURLProtocol connection:willSendRequest:]", _correlationId, @"Redirect response: %@. New request:%@", redirectResponse.URL, request.URL);
     
     // Disallow HTTP for ADURLProtocol
@@ -244,6 +248,8 @@ willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challe
     }
     
     NSMutableURLRequest* mutableRequest = [request mutableCopy];
+    
+    mutableRequest.timeoutInterval = 0;
     
     [ADCustomHeaderHandler applyCustomHeadersTo:mutableRequest];
     [ADURLProtocol addCorrelationId:_correlationId toRequest:mutableRequest];
@@ -287,6 +293,7 @@ willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challe
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
     (void)connection;
+    NSLog(@"timeout interval = %lf", connection.currentRequest.timeoutInterval);
     
     [self.client URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
 }
@@ -294,6 +301,7 @@ willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challe
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
     (void)connection;
+    NSLog(@"timeout interval = %lf", connection.currentRequest.timeoutInterval);
     
     [self.client URLProtocol:self didLoadData:data];
 }
@@ -301,6 +309,7 @@ willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challe
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
     (void)connection;
+    NSLog(@"timeout interval = %lf", connection.currentRequest.timeoutInterval);
     
     [self.client URLProtocolDidFinishLoading:self];
 }
